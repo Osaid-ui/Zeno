@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini RPG Game</title>
+<style>
+body { margin:0; font-family:Arial; background:#111; color:white; }
+#menu, #game, #editor, #settings { display:none; text-align:center; padding:20px; }
+button { padding:10px 20px; margin:10px; font-size:16px; }
+.bar { width:200px; height:20px; background:#444; margin:5px auto; }
+.fill { height:100%; background:lime; }
+</style>
+</head>
+<body>
+
+<div id="menu">
+<h1>⚔️ Mini RPG</h1>
+<button onclick="startGame()">Start</button>
+<button onclick="openEditor()">Edit Character</button>
+<button onclick="openSettings()">Settings</button>
+</div>
+
+<div id="editor">
+<h2>Character Editor</h2>
+
+<label>Gender:</label>
+<select>
+<option>Boy</option>
+<option>Girl</option>
+</select><br>
+
+<label>Hair:</label>
+<select>
+<option>Short</option>
+<option>Long</option>
+<option>Spiky</option>
+</select><br>
+
+<label>Clothes:</label>
+<select>
+<option>Armor</option>
+<option>Casual</option>
+<option>Robe</option>
+</select><br>
+
+<label>Shoes:</label>
+<select>
+<option>Boots</option>
+<option>Sneakers</option>
+<option>Sandals</option>
+</select><br>
+
+<button onclick="backToMenu()">Back</button>
+</div>
+
+<div id="settings">
+<h2>Settings</h2>
+<label><input type="checkbox"> Mute Music</label><br>
+<label>FOV: <input type="range" min="60" max="120" value="90"></label><br>
+<button onclick="backToMenu()">Back</button>
+</div>
+
+<div id="game">
+<h2 id="stage">Stage 1</h2>
+
+<div class="bar"><div id="health" class="fill" style="width:100%"></div></div>
+<div class="bar"><div id="stamina" class="fill" style="width:100%; background:yellow"></div></div>
+
+<p id="enemy">Enemy HP: 30</p>
+<button onclick="attack()">Attack</button>
+</div>
+
+<script>
+let stage = 1;
+let player = { hp:100, stamina:100, power:10 };
+let enemy = { hp:30, power:5 };
+
+function show(id) {
+ document.getElementById('menu').style.display='none';
+ document.getElementById('game').style.display='none';
+ document.getElementById('editor').style.display='none';
+ document.getElementById('settings').style.display='none';
+ document.getElementById(id).style.display='block';
+}
+
+function startGame() {
+ show('game');
+ spawnEnemy();
+}
+
+function openEditor() { show('editor'); }
+function openSettings() { show('settings'); }
+function backToMenu() { show('menu'); }
+
+function spawnEnemy() {
+ if(stage < 5) {
+   enemy.hp = 30 + stage*10;
+   enemy.power = 5 + stage*2;
+   document.getElementById('stage').innerText = "Stage " + stage;
+   document.getElementById('enemy').innerText = "Enemy HP: " + enemy.hp;
+ } else {
+   bossPhase1();
+ }
+}
+
+function attack() {
+ if(player.stamina <= 0) return alert("No stamina!");
+
+ enemy.hp -= player.power;
+ player.stamina -= 10;
+
+ if(enemy.hp <= 0) {
+   stage++;
+   player.power += 5;
+   player.stamina = 100;
+   spawnEnemy();
+   updateBars();
+   return;
+ }
+
+ player.hp -= enemy.power;
+ updateBars();
+
+ if(player.hp <= 0) {
+   alert("You lost!");
+   location.reload();
+ }
+}
+
+function updateBars() {
+ document.getElementById('health').style.width = player.hp + "%";
+ document.getElementById('stamina').style.width = player.stamina + "%";
+ document.getElementById('enemy').innerText = "Enemy HP: " + enemy.hp;
+}
+
+function bossPhase1() {
+ enemy = { hp:150, power:15 };
+ document.getElementById('stage').innerText = "FINAL BOSS - Phase 1";
+ document.getElementById('enemy').innerText = "Boss HP: " + enemy.hp;
+}
+
+function bossPhase2() {
+ enemy = { hp:200, power:25 };
+ document.getElementById('stage').innerText = "FINAL BOSS - Phase 2";
+ document.getElementById('enemy').innerText = "Boss HP: " + enemy.hp;
+}
+
+const originalAttack = attack;
+attack = function() {
+ if(stage < 5) return originalAttack();
+
+ enemy.hp -= player.power;
+ player.hp -= enemy.power;
+ updateBars();
+
+ if(enemy.hp <= 0) {
+   if(document.getElementById('stage').innerText.includes("Phase 1")) {
+     bossPhase2();
+   } else {
+     winGame();
+   }
+ }
+}
+
+function winGame() {
+ document.body.innerHTML = `
+ <h1>🎬 CUTSCENE</h1>
+ <p>The hero defeated the Final Boss!</p>
+ <p>Peace has returned to the land 🌍</p>
+ <h2>🏆 YOU WIN!</h2>
+ `;
+}
+
+show('menu');
+</script>
+
+</body>
+</html>
